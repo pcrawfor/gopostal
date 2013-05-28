@@ -83,7 +83,6 @@ func (m *Mailer) Send(msg Message) error {
 	)
 
 	if err != nil {
-		fmt.Println("Error sending: ", err)
 		return err
 	}
 
@@ -101,22 +100,34 @@ type Message struct {
 	IsText   bool
 	HtmlBody string
 	IsHtml   bool
+	Headers  map[string]string
 }
 
 func (m *Mailer) NewMessage(to, from, subject, body, htmlBody string) *Message {
 	isText := body != ""
 	isHtml := htmlBody != ""
 
-	toAddr := mail.Address{"", to}
+	toAddr := convertStringToAddress(to)
+	fromAddr := convertStringToAddress(from)
 
 	return &Message{
 		To:       []mail.Address{toAddr},
-		From:     mail.Address{"", from},
+		From:     fromAddr,
 		Subject:  subject,
 		HtmlBody: htmlBody,
 		IsHtml:   isHtml,
 		TextBody: body,
 		IsText:   isText,
+		Headers:  make(map[string]string),
+	}
+}
+
+func convertStringToAddress(address string) mail.Address {
+	arr := strings.Split(address, " ")
+	if len(arr) == 2 {
+		return mail.Address{arr[0], arr[1]}
+	} else {
+		return mail.Address{address, address}
 	}
 }
 
@@ -146,15 +157,19 @@ func (m *Message) validate() error {
 }
 
 func (m *Message) AddTo(to string) {
-	m.To = append(m.To, mail.Address{"", to})
+	m.To = append(m.To, convertStringToAddress(to))
 }
 
 func (m *Message) AddCc(cc string) {
-	m.cc = append(m.cc, mail.Address{"", cc})
+	m.cc = append(m.cc, convertStringToAddress(cc))
 }
 
 func (m *Message) AddBcc(bcc string) {
-	m.bcc = append(m.bcc, mail.Address{"", bcc})
+	m.bcc = append(m.bcc, convertStringToAddress(bcc))
+}
+
+func (m *Message) AddHeader(name, value string) {
+	m.Headers[name] = value
 }
 
 /*
@@ -185,6 +200,12 @@ func (m *Message) Bytes() []byte {
 	}
 	if len(m.bcc) > 0 {
 		b.WriteString("CC: " + addressListString(m.bcc) + crlf)
+	}
+
+	// add custom headers
+	for name, val := range m.Headers {
+		res := name + ": " + val
+		b.WriteString(res + crlf)
 	}
 
 	b.WriteString("Subject: " + m.Subject + crlf)
