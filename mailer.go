@@ -9,6 +9,8 @@ Add attachments - in progress
 Send with cc or bcc recipients
 Built in config for Gmail, Sendgrid
 
+TODO: handle custom mail headers
+
 Based on work from:
 * github.com/ungerik/go-mail
 * github.com/marcw/ezmail
@@ -55,7 +57,6 @@ Send email may contain html and/or text content
 */
 
 func (m *Mailer) SendMail(to, from, subject, body, htmlBody string) error {
-	fmt.Println("Send mail with text/html body")
 	msg := m.NewMessage(to, from, subject, body, htmlBody)
 	return m.Send(*msg)
 }
@@ -64,8 +65,6 @@ func (m *Mailer) SendMail(to, from, subject, body, htmlBody string) error {
 Send email message via smtp
 */
 func (m *Mailer) Send(msg Message) error {
-	fmt.Println("Sending message.")
-
 	// validate the Message object
 	if verr := msg.validate(); verr != nil {
 		return verr
@@ -107,14 +106,6 @@ type Message struct {
 func (m *Mailer) NewMessage(to, from, subject, body, htmlBody string) *Message {
 	isText := body != ""
 	isHtml := htmlBody != ""
-
-	if isText {
-		fmt.Println("has text: ", body)
-	}
-
-	if isHtml {
-		fmt.Println("has html: ", htmlBody)
-	}
 
 	toAddr := mail.Address{"", to}
 
@@ -189,7 +180,6 @@ func (m *Message) Bytes() []byte {
 	b.WriteString("To: " + addressListString(m.To) + crlf)
 	b.WriteString("From: " + m.From.String() + crlf)
 
-	// TODO handle cc and bcc lists
 	if len(m.cc) > 0 {
 		b.WriteString("BCC: " + addressListString(m.cc) + crlf)
 	}
