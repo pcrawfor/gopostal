@@ -52,15 +52,15 @@ type testpair struct {
 var tests = []testpair{
 	// text only
 	{[]string{"testrep@test.com", "testfrom@test.com", "Testing", "It's the text body of the mail", ""},
-		[]byte("To: <testrep@test.com>\r\nFrom: <testfrom@test.com>\r\nSubject: Testing\r\nDate: 24 May 13 16:32 UTC\r\nMIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\nIt's the text body of the mail"),
+		[]byte("To: \"testrep@test.com\" <testrep@test.com>\r\nFrom: \"testfrom@test.com\" <testfrom@test.com>\r\nSubject: Testing\r\nDate: 24 May 13 16:32 UTC\r\nMIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\nIt's the text body of the mail"),
 		true, false},
 	// text and html
 	{[]string{"testrep1@test.com", "testfrom1@test.com", "Testing some more: here", "It's the text body of the mail", "<h1>Hi!</h1> <p>This is some more testing with html</p> <p>Check out <a href='http://www.github.com'>Github!</a></p>"},
-		[]byte("To: <testrep1@test.com>\r\nFrom: <testfrom1@test.com>\r\nSubject: Testing some more: here\r\nDate: 24 May 13 16:32 UTC\r\nContent-Type: multipart/alternative; boundary=faaac39e6bf197bd7ae820c49d5f9958\r\n\r\n--faaac39e6bf197bd7ae820c49d5f9958\r\nMIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n\r\nIt's the text body of the mail\r\n\r\n--faaac39e6bf197bd7ae820c49d5f9958\r\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n\r\n<h1>Hi!</h1> <p>This is some more testing with html</p> <p>Check out <a href='http://www.github.com'>Github!</a></p>\r\n\r\n--faaac39e6bf197bd7ae820c49d5f9958--\r\n"),
+		[]byte("To: \"testrep1@test.com\" <testrep1@test.com>\r\nFrom: \"testfrom1@test.com\" <testfrom1@test.com>\r\nSubject: Testing some more: here\r\nDate: 24 May 13 16:32 UTC\r\nContent-Type: multipart/alternative; boundary=faaac39e6bf197bd7ae820c49d5f9958\r\n\r\n--faaac39e6bf197bd7ae820c49d5f9958\r\nMIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n\r\nIt's the text body of the mail\r\n\r\n--faaac39e6bf197bd7ae820c49d5f9958\r\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n\r\n<h1>Hi!</h1> <p>This is some more testing with html</p> <p>Check out <a href='http://www.github.com'>Github!</a></p>\r\n\r\n--faaac39e6bf197bd7ae820c49d5f9958--\r\n"),
 		true, true},
 	// html only
 	{[]string{"testrep2@test.com", "testfrom2@test.com", "Testing html only", "", "<h1>Hi!</h1> <p>This is some more testing with html</p> <p>Check out <a href='http://www.github.com'>Github!</a></p>"},
-		[]byte("To: <testrep2@test.com>\r\nFrom: <testfrom2@test.com>\r\nSubject: Testing html only\r\nDate: 24 May 13 16:32 UTC\r\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n<h1>Hi!</h1> <p>This is some more testing with html</p> <p>Check out <a href='http://www.github.com'>Github!</a></p>"),
+		[]byte("To: \"testrep2@test.com\" <testrep2@test.com>\r\nFrom: \"testfrom2@test.com\" <testfrom2@test.com>\r\nSubject: Testing html only\r\nDate: 24 May 13 16:32 UTC\r\nMIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n<h1>Hi!</h1> <p>This is some more testing with html</p> <p>Check out <a href='http://www.github.com'>Github!</a></p>"),
 		false, true},
 }
 
@@ -83,7 +83,7 @@ func TestTextEmail(t *testing.T) {
 		check, _ := mail.ReadMessage(bytes.NewBuffer(msg.Bytes()))
 		from, _ := check.Header.AddressList("From")
 		if len(from) > 0 {
-			if from[0].Name != "" || from[0].Address != info.messageValues[1] {
+			if from[0].Name != info.messageValues[1] || from[0].Address != info.messageValues[1] {
 				t.Error("From address to be: " + info.messageValues[1] + " got: " + from[0].Address)
 			}
 		}
