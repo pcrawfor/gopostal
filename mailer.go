@@ -123,9 +123,9 @@ func convertStringToAddress(address string) mail.Address {
 	arr := strings.Split(address, " ")
 	if len(arr) == 2 {
 		return mail.Address{arr[0], arr[1]}
-	} else {
-		return mail.Address{address, address}
 	}
+
+	return mail.Address{address, address}
 }
 
 // validate will verify that the message has valid addresses for to/from and non-empty subject and content strings
