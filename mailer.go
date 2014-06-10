@@ -1,10 +1,9 @@
+// gopostal - Supports Sending Text and HTML based emails.  Send email as plain text or html.
+package gopostal
+
 /*
 
-Mailer
-
-Supports Sending Text and HTML based emails
-
-Send email as plain text or thml
+Send email as plain text or html
 Add attachments - in progress
 Send with cc or bcc recipients
 Built in config for Gmail, Sendgrid
@@ -16,8 +15,6 @@ Based on work from:
 * github.com/marcw/ezmail
 
 */
-
-package gopostal
 
 import (
 	"bytes"
@@ -40,30 +37,28 @@ type Mailer struct {
 	Port     string
 }
 
+// NewMailer returns an instance of Mailer with the passed in connnection configuration options
 func NewMailer(identity, username, password, host, port string) *Mailer {
 	return &Mailer{Identity: identity, Username: username, Password: password, Host: host, Port: port}
 }
 
+// NewGmailMailer is a shortcut constructor for a Mailer with a gmail connection
 func NewGmailMailer(username, password string) *Mailer {
 	return &Mailer{Identity: "", Username: username, Password: password, Host: "smtp.gmail.com", Port: "587"}
 }
 
+// NewSendGridMailer is a shortcut constructor for a Mailer with a sendgrid connection
 func NewSendGridMailer(username, password string) *Mailer {
 	return &Mailer{Identity: "", Username: username, Password: password, Host: "smtp.sendgrid.net", Port: "25"}
 }
 
-/*
-Send email may contain html and/or text content
-*/
-
+// SendMail sends email to the to address populating the from, body and htmlbody provided
 func (m *Mailer) SendMail(to, from, subject, body, htmlBody string) error {
 	msg := m.NewMessage(to, from, subject, body, htmlBody)
 	return m.Send(*msg)
 }
 
-/*
-Send email message via smtp
-*/
+// Send will send the given Message
 func (m *Mailer) Send(msg Message) error {
 	// validate the Message object
 	if verr := msg.validate(); verr != nil {
@@ -103,6 +98,7 @@ type Message struct {
 	Headers  map[string]string
 }
 
+// NewMessage returns a new Message object build with the to, from, subject, body and html body provided
 func (m *Mailer) NewMessage(to, from, subject, body, htmlBody string) *Message {
 	isText := body != ""
 	isHtml := htmlBody != ""
@@ -122,6 +118,7 @@ func (m *Mailer) NewMessage(to, from, subject, body, htmlBody string) *Message {
 	}
 }
 
+// convertStringToAddress formats an address string building a mail.Address object and returning it
 func convertStringToAddress(address string) mail.Address {
 	arr := strings.Split(address, " ")
 	if len(arr) == 2 {
@@ -131,9 +128,7 @@ func convertStringToAddress(address string) mail.Address {
 	}
 }
 
-/*
-Validate that the message has valid addresses for to/from and non-empty subject and content strings
-*/
+// validate will verify that the message has valid addresses for to/from and non-empty subject and content strings
 func (m *Message) validate() error {
 	// if invalid return an error
 
@@ -156,14 +151,17 @@ func (m *Message) validate() error {
 	return nil
 }
 
+// AddTo appends a to address to the message
 func (m *Message) AddTo(to string) {
 	m.To = append(m.To, convertStringToAddress(to))
 }
 
+// AddCc appends a cc address to the message
 func (m *Message) AddCc(cc string) {
 	m.cc = append(m.cc, convertStringToAddress(cc))
 }
 
+// AddBcc appends a bcc address to the message
 func (m *Message) AddBcc(bcc string) {
 	m.bcc = append(m.bcc, convertStringToAddress(bcc))
 }
@@ -172,23 +170,17 @@ func (m *Message) AddHeader(name, value string) {
 	m.Headers[name] = value
 }
 
-/*
-Boundary key for use in multipart mail content
-
-Based on implemenation from github.com/ungerik/go-mail
-*/
+// boundary creates a boundary key for use in multipart mail content
+// Based on implemenation from github.com/ungerik/go-mail
 func (m *Message) boundary() string {
 	h := md5.New()
 	io.WriteString(h, fmt.Sprintf("%s", time.Now().Nanosecond()))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-/*
-Return the byte array for the email content - if there is text and html send both appropriately
-*/
-
 const crlf = "\r\n"
 
+// Bytes returns a byte array for the email content
 func (m *Message) Bytes() []byte {
 	b := bytes.NewBuffer(nil)
 
@@ -234,9 +226,7 @@ func (m *Message) Bytes() []byte {
 	return b.Bytes()
 }
 
-/*
-Return recipients - address list of To addresses
-*/
+// recipients returns a slice of strings containing the list of recipients
 func (m *Message) recipients() []string {
 	var recipients []string
 	for _, i := range m.To {
@@ -245,9 +235,7 @@ func (m *Message) recipients() []string {
 	return recipients
 }
 
-/*
-String of comma separated addresses
-*/
+// addressListString returns a string of the addresses passed in concatenated together
 func addressListString(addresses []mail.Address) string {
 	var addressStrings []string
 	for _, i := range addresses {
