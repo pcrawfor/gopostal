@@ -1,4 +1,4 @@
-// gopostal - Supports Sending Text and HTML based emails.  Send email as plain text or html.
+// Package gopostal - Supports Sending Text and HTML based emails.  Send email as plain text or html.
 package gopostal
 
 /*
@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-// Mailer
+// Mailer represents a mail sender object
 type Mailer struct {
 	Identity string
 	Username string
@@ -84,7 +84,7 @@ func (m *Mailer) Send(msg Message) error {
 	return nil
 }
 
-// Message
+// Message represents an email message containing the sender to, the from, cc and bcc recipients and all content for the message including text and html body content
 type Message struct {
 	From     mail.Address
 	To       []mail.Address
@@ -133,19 +133,19 @@ func (m *Message) validate() error {
 	// if invalid return an error
 
 	if len(m.To) == 0 {
-		return errors.New("No to addressees for message")
+		return errors.New("no to addressees for message")
 	}
 
 	if &m.From == nil {
-		return errors.New("No from address for message")
+		return errors.New("no from address for message")
 	}
 
 	if m.Subject == "" {
-		return errors.New("Empty subject for message")
+		return errors.New("empty subject for message")
 	}
 
 	if m.TextBody == "" && m.HtmlBody == "" {
-		return errors.New("No text or html content for message")
+		return errors.New("no text or html content for message")
 	}
 
 	return nil
@@ -166,6 +166,7 @@ func (m *Message) AddBcc(bcc string) {
 	m.bcc = append(m.bcc, convertStringToAddress(bcc))
 }
 
+// AddHeader appends a bcc address to the message
 func (m *Message) AddHeader(name, value string) {
 	m.Headers[name] = value
 }
