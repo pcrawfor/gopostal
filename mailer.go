@@ -54,7 +54,10 @@ func NewSendGridMailer(username, password string) *Mailer {
 
 // SendMail sends email to the to address populating the from, body and htmlbody provided
 func (m *Mailer) SendMail(to, from, subject, body, htmlBody string) error {
-	msg := m.NewMessage(to, from, subject, body, htmlBody)
+	msg, err := m.NewMessage(to, from, subject, body, htmlBody)
+	if err != nil {
+		return err
+	}
 	return m.Send(*msg)
 }
 
@@ -99,33 +102,29 @@ type Message struct {
 }
 
 // NewMessage returns a new Message object build with the to, from, subject, body and html body provided
-func (m *Mailer) NewMessage(to, from, subject, body, htmlBody string) *Message {
+func (m *Mailer) NewMessage(to, from, subject, body, htmlBody string) (*Message, error) {
 	isText := body != ""
 	isHtml := htmlBody != ""
 
-	toAddr := convertStringToAddress(to)
-	fromAddr := convertStringToAddress(from)
+	toAddr, err := mail.ParseAddress(to)
+	if err != nil {
+		return nil, err
+	}
+	fromAddr, err := mail.ParseAddress(from)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Message{
-		To:       []mail.Address{toAddr},
-		From:     fromAddr,
+		To:       []mail.Address{*toAddr},
+		From:     *fromAddr,
 		Subject:  subject,
 		HtmlBody: htmlBody,
 		IsHtml:   isHtml,
 		TextBody: body,
 		IsText:   isText,
 		Headers:  make(map[string]string),
-	}
-}
-
-// convertStringToAddress formats an address string building a mail.Address object and returning it
-func convertStringToAddress(address string) mail.Address {
-	arr := strings.Split(address, " ")
-	if len(arr) == 2 {
-		return mail.Address{arr[0], arr[1]}
-	}
-
-	return mail.Address{address, address}
+	}, nil
 }
 
 // validate will verify that the message has valid addresses for to/from and non-empty subject and content strings
@@ -153,17 +152,26 @@ func (m *Message) validate() error {
 
 // AddTo appends a to address to the message
 func (m *Message) AddTo(to string) {
-	m.To = append(m.To, convertStringToAddress(to))
+	a, e := mail.ParseAddress(to)
+	if e == nil {
+		m.To = append(m.To, *a)
+	}
 }
 
 // AddCc appends a cc address to the message
 func (m *Message) AddCc(cc string) {
-	m.cc = append(m.cc, convertStringToAddress(cc))
+	a, e := mail.ParseAddress(cc)
+	if e == nil {
+		m.cc = append(m.cc, *a)
+	}
 }
 
 // AddBcc appends a bcc address to the message
 func (m *Message) AddBcc(bcc string) {
-	m.bcc = append(m.bcc, convertStringToAddress(bcc))
+	a, e := mail.ParseAddress(bcc)
+	if e == nil {
+		m.bcc = append(m.bcc, *a)
+	}
 }
 
 // AddHeader appends a bcc address to the message

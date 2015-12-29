@@ -68,7 +68,10 @@ func TestTextEmail(t *testing.T) {
 	m := NewMailer("", "username", "password", "host", "587")
 	for _, info := range tests {
 
-		msg := m.NewMessage(info.messageValues[0], info.messageValues[1], info.messageValues[2], info.messageValues[3], info.messageValues[4])
+		msg, err := m.NewMessage(info.messageValues[0], info.messageValues[1], info.messageValues[2], info.messageValues[3], info.messageValues[4])
+		if err != nil {
+			t.Error("Expected message creation to succeed: \n", err)
+		}
 
 		// verifying length since date & boundary values will mess up the direct byte comparison
 		if len(info.messageContent) != len(msg.Bytes()) {
